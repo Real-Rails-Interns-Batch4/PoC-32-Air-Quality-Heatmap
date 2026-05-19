@@ -1,0 +1,133 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg-obsidian: #030712;
+  --bg-navy: #0B1117;
+  --border-slate: #1F2937;
+  --accent-cyan: #38BDF8;
+  --accent-indigo: #818CF8;
+  --cyan-glow: rgba(56, 189, 248, 0.15);
+  --cyan-soft: rgba(56, 189, 248, 0.06);
+  --indigo-glow: rgba(129, 140, 248, 0.15);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  overflow: hidden;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-navy);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border-slate);
+  border-radius: 2px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--accent-cyan);
+}
+
+/* DEXTERE Glass Card */
+.glass-card {
+  background: rgba(11, 17, 23, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--border-slate);
+}
+
+/* Cyan Glow on Active Elements */
+.cyan-glow {
+  box-shadow: 0 0 0 0.5px var(--accent-cyan), 0 0 12px var(--cyan-glow);
+}
+
+.cyan-text-glow {
+  text-shadow: 0 0 8px rgba(56, 189, 248, 0.5);
+}
+
+/* Status Dot Pulse */
+.status-dot-live {
+  animation: status-pulse 2s ease-in-out infinite;
+}
+
+@keyframes status-pulse {
+  0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(56, 189, 248, 0.4); }
+  50% { opacity: 0.8; box-shadow: 0 0 0 4px rgba(56, 189, 248, 0); }
+}
+
+/* AQI Risk Colors */
+.aqi-good     { color: #22C55E; }
+.aqi-moderate { color: #FACC15; }
+.aqi-sensitive{ color: #F97316; }
+.aqi-unhealthy{ color: #EF4444; }
+.aqi-very-bad { color: #A855F7; }
+.aqi-hazardous{ color: #991B1B; }
+
+/* Scanline overlay */
+.scanline::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    to bottom,
+    transparent 0px,
+    transparent 3px,
+    rgba(0,0,0,0.03) 3px,
+    rgba(0,0,0,0.03) 4px
+  );
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Noise texture */
+.noise-overlay::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  opacity: 0.02;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 9999;
+}
+
+/* Grid map background */
+.world-grid {
+  background-image: 
+    linear-gradient(rgba(31, 41, 55, 0.4) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(31, 41, 55, 0.4) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+/* Recharts overrides */
+.recharts-tooltip-wrapper .recharts-default-tooltip {
+  background: var(--bg-navy) !important;
+  border: 1px solid var(--border-slate) !important;
+  border-radius: 6px !important;
+}
+
+/* Fade animations */
+.animate-fade-in {
+  animation: fadeIn 0.5s ease forwards;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Scrollable sections */
+.sidebar-scroll {
+  overflow-y: auto;
+  overflow-x: hidden;
+}
