@@ -17,10 +17,11 @@
   box-sizing: border-box;
 }
 
+/* Change this in app/globals.css */
 html,
 body {
   height: 100%;
-  overflow: hidden;
+  overflow: auto !important; /* Force the browser to show what's hidden */
 }
 
 /* Scrollbar */

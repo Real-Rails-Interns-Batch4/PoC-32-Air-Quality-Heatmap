@@ -28,11 +28,8 @@ function topoToSVGPaths(topo: any): string[] {
     
     const pts = raw.map(([dx, dy]) => {
       x += dx; y += dy;
-      // 1. Extract the true raw geographical coordinates from TopoJSON space
       const lng = x * scale[0] + translate[0];
       const lat = y * scale[1] + translate[1];
-      
-      // 2. Pass them through your standardized projection rules to eliminate spatial skewing
       return [lx(lng), ly(lat)] as [number, number];
     });
     return reversed ? pts.reverse() : pts;
@@ -40,27 +37,23 @@ function topoToSVGPaths(topo: any): string[] {
 
   const geomToPath = (geom: any): string => {
     const buildRing = (arcIdxList: number[]) => {
-  const pts = arcIdxList.flatMap(decodeArc);
-  if (pts.length === 0) return "";
-  
-  let pathStr = "";
-  let lastX = -1;
+      const pts = arcIdxList.flatMap(decodeArc);
+      if (pts.length === 0) return "";
+      
+      let pathStr = "";
+      let lastX = -1;
+      for (let i = 0; i < pts.length; i++) {
+        const [x, y] = pts[i];
+        if (i === 0 || Math.abs(x - lastX) > 500) {
+          pathStr += ` M ${x.toFixed(1)} ${y.toFixed(1)}`;
+        } else {
+          pathStr += ` L ${x.toFixed(1)} ${y.toFixed(1)}`;
+        }
+        lastX = x;
+      }
+      return pathStr + " Z";
+    };
 
-  for (let i = 0; i < pts.length; i++) {
-    const [x, y] = pts[i];
-    
-    // If the distance between the current point and last point is huge (e.g. > 500px),
-    // it means the path is wrapping around the globe. Move the pen instead of drawing a line!
-    if (i === 0 || Math.abs(x - lastX) > 500) {
-      pathStr += ` M ${x.toFixed(1)} ${y.toFixed(1)}`;
-    } else {
-      pathStr += ` L ${x.toFixed(1)} ${y.toFixed(1)}`;
-    }
-    lastX = x;
-  }
-  
-  return pathStr + " Z";
-};
     if (geom.type === "Polygon") {
       return geom.arcs.map(buildRing).join(" ");
     }
@@ -80,20 +73,27 @@ function topoToSVGPaths(topo: any): string[] {
 export default function AQWorldMap({ locations, onSelectLocation, selectedId }: MapProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const svgRef = useRef<SVGSVGElement>(null);
-  const [dims, setDims] = useState({ w: 800, h: 480 });
-  const [landPaths, setLandPaths] = useState<string[]>([]);
+  const [dims, setDims] = useState({ w: 800, h: 420 }); // Set optimized baseline safety height metrics
+  const landPathsRef = useRef<string[]>([]);
+  const [landPathsLoaded, setLandPathsLoaded] = useState(false);
   const [mapLoading, setMapLoading] = useState(true);
   const [tooltip, setTooltip] = useState<{ x: number; y: number; loc: EnrichedLocation } | null>(null);
   const [viewBox, setViewBox] = useState({ x: 0, y: 0, w: 1000, h: 500 });
   const isDragging = useRef(false);
   const lastPt = useRef({ x: 0, y: 0 });
 
-  // Load Natural Earth TopoJSON from CDN
+  // Load Natural Earth TopoJSON from CDN securely using cached layout checks
   useEffect(() => {
+    if (landPathsRef.current.length > 0) {
+      setMapLoading(false);
+      setLandPathsLoaded(true);
+      return;
+    }
     fetch("https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json")
       .then((r) => r.json())
       .then((topo) => {
-        setLandPaths(topoToSVGPaths(topo));
+        landPathsRef.current = topoToSVGPaths(topo);
+        setLandPathsLoaded(true);
         setMapLoading(false);
       })
       .catch(() => {
@@ -101,17 +101,21 @@ export default function AQWorldMap({ locations, onSelectLocation, selectedId }: 
       });
   }, []);
 
-  // Resize observer
+  // Rigid structural resize listener to isolate chart components from size oscillation feedback
   useEffect(() => {
-    const obs = new ResizeObserver((entries) => {
-      const e = entries[0];
-      if (e) setDims({ w: e.contentRect.width, h: e.contentRect.height });
-    });
-    if (containerRef.current) obs.observe(containerRef.current);
-    return () => obs.disconnect();
+    const el = containerRef.current;
+    if (!el) return;
+    const updateSize = () => {
+      setDims({
+        w: el.clientWidth || 800,
+        h: el.clientHeight || 420
+      });
+    };
+    updateSize();
+    window.addEventListener("resize", updateSize);
+    return () => window.removeEventListener("resize", updateSize);
   }, []);
 
-  // SVG coordinate tracking helper
   const screenToSVG = (cx: number, cy: number) => {
     const svg = svgRef.current;
     if (!svg) return { x: 0, y: 0 };
@@ -123,7 +127,6 @@ export default function AQWorldMap({ locations, onSelectLocation, selectedId }: 
     return { x: p.x, y: p.y };
   };
 
-  // Zoom on wheel (centered on cursor position)
   const handleWheel = useCallback((e: WheelEvent) => {
     e.preventDefault();
     const factor = e.deltaY < 0 ? 0.82 : 1.22;
@@ -193,10 +196,8 @@ export default function AQWorldMap({ locations, onSelectLocation, selectedId }: 
         viewBox={`${viewBox.x} ${viewBox.y} ${viewBox.w} ${viewBox.h}`}
         style={{ display: "block" }}
       >
-        {/* Ocean Background Canvas */}
         <rect x="-500" y="-250" width="2000" height="1000" fill="#020C16" />
 
-        {/* Graticule Grid Lines */}
         {[-60, -30, 0, 30, 60].map((lat) => (
           <line key={`lat${lat}`}
             x1={-500} y1={ly(lat)} x2={1500} y2={ly(lat)}
@@ -214,11 +215,10 @@ export default function AQWorldMap({ locations, onSelectLocation, selectedId }: 
           />
         ))}
 
-        {/* Land Vectors Generated directly from pure decoded TopoJSON parameters */}
-        {!mapLoading && (
+        {!mapLoading && landPathsLoaded && (
           <g>
-            {landPaths.map((d, i) => (
-              <path key={i} d={d}
+            {landPathsRef.current.map((d, i) => (
+              <path key={`land-${i}`} d={d}
                 fill="#0D2235"
                 stroke="#1B3D58"
                 strokeWidth={0.5}
@@ -229,7 +229,6 @@ export default function AQWorldMap({ locations, onSelectLocation, selectedId }: 
           </g>
         )}
 
-        {/* Station Markers */}
         {stations
           .sort((a, b) => a.loc.riskScore - b.loc.riskScore)
           .map(({ loc, x, y }) => {
@@ -239,7 +238,7 @@ export default function AQWorldMap({ locations, onSelectLocation, selectedId }: 
               : loc.staleness === "recent" ? "#818CF8" : "#2D4060";
 
             return (
-              <g key={loc.id}>
+              <g key={`station-node-${loc.id}`}>
                 {loc.staleness === "live" && (
                   <circle cx={x} cy={y} r={r * 2.5}
                     fill="none" stroke="#38BDF8" strokeWidth={0.3} opacity={0.2} />
@@ -271,7 +270,6 @@ export default function AQWorldMap({ locations, onSelectLocation, selectedId }: 
             );
           })}
 
-        {/* Latitude text labels */}
         {[-60, -30, 0, 30, 60].map((lat) => (
           <text key={`lbl${lat}`}
             x={viewBox.x + viewBox.w * 0.005}
@@ -285,7 +283,6 @@ export default function AQWorldMap({ locations, onSelectLocation, selectedId }: 
         ))}
       </svg>
 
-      {/* Tooltip */}
       {tooltip && (
         <div className="absolute z-20 pointer-events-none rounded-lg p-3 w-52"
           style={{
@@ -325,7 +322,6 @@ export default function AQWorldMap({ locations, onSelectLocation, selectedId }: 
         </div>
       )}
 
-      {/* Legend Panel */}
       <div className="absolute bottom-4 left-4 rounded-lg p-3"
         style={{ background: "rgba(11,17,23,0.92)", border: "1px solid #1F2937" }}>
         <p className="text-xs font-semibold tracking-widest uppercase mb-2" style={{ color: "#38BDF8" }}>

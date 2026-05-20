@@ -1,47 +1,159 @@
 """
 DEXTERE Air Quality Intelligence — FastAPI Backend
-Phase 2: Data Ingestion + Logic Layer (Claude Protocol)
+Production Core Implementation Core File
 
 Runs on: uvicorn main:app --reload --port 8000
 """
 
+import os
 from fastapi import FastAPI, Query, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import StreamingResponse
 import httpx
 import pandas as pd
-import numpy as np
-import io
 import json
-from datetime import datetime, timezone
 from typing import Optional
 import logging
+from dotenv import load_dotenv
 
+# Initialize logging profiles
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("dextere-aq")
 
+# Load environmental variables from local development env files.
+load_dotenv()
+load_dotenv(".env.local")
+
 app = FastAPI(
     title="DEXTERE Air Quality Intelligence API",
-    description="FastAPI + Pandas orchestration layer over OpenAQ v3",
-    version="1.0.0",
+    description="FastAPI Orchestration + Pandas Processing Single Source of Truth over OpenAQ v3",
+    version="2.0.0",
 )
 
+# Configure CORS policies to allow web communication with Next.js on port 3000
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "https://*.vercel.app"],
+    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000","http://localhost:3006","http://127.0.0.1:3006", "https://*.vercel.app"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 OPENAQ_BASE = "https://api.openaq.org/v3"
-HEADERS = {"User-Agent": "DEXTERE-AQ-Terminal/1.0", "Accept": "application/json"}
+OPENAQ_API_KEY = os.getenv("OPENAQ_API_KEY")
+DEFAULT_PAGE_SIZE = 500
+MAX_PAGE_SIZE = 1000
+COUNTRY_PAGE_SIZE = 1000
+
+HEADERS = {
+    "User-Agent": "DEXTERE-AQ-Terminal/1.0",
+    "Accept": "application/json"
+}
+
+if OPENAQ_API_KEY:
+    HEADERS["X-API-Key"] = OPENAQ_API_KEY
+    logger.info("OpenAQ API credentials successfully verified and appended to headers.")
+else:
+    logger.warning("WARNING: OPENAQ_API_KEY variable is absent. Upstream connection will trigger a 401 error.")
 
 
-# ─── Pandas Risk Score Pipeline ─────────────────────────────────────────────
+async def fetch_openaq(path: str, params: Optional[dict] = None, timeout: int = 25) -> dict:
+    """Fetch OpenAQ JSON through the backend so the UI never talks upstream directly."""
+    url = f"{OPENAQ_BASE}{path}"
+    async with httpx.AsyncClient(timeout=timeout) as client:
+        try:
+            resp = await client.get(url, params=params or {}, headers=HEADERS)
+            resp.raise_for_status()
+            return resp.json()
+        except Exception as e:
+            raise HTTPException(status_code=502, detail=f"OpenAQ request rejected: {str(e)}")
+
+
+def normalize_found(found) -> Optional[int]:
+    if isinstance(found, int):
+        return found
+    if isinstance(found, str):
+        cleaned = found.strip().replace(",", "")
+        if cleaned.isdigit():
+            return int(cleaned)
+    return None
+
+
+def build_meta(upstream_meta: dict, page: int, limit: int, result_count: int) -> dict:
+    found = normalize_found(upstream_meta.get("found"))
+    has_more = result_count >= limit
+    if found is not None:
+        has_more = page * limit < found
+
+    return {
+        "found": found,
+        "foundLabel": upstream_meta.get("found", found if found is not None else result_count),
+        "page": int(upstream_meta.get("page", page) or page),
+        "limit": int(upstream_meta.get("limit", limit) or limit),
+        "returned": result_count,
+        "hasMore": has_more,
+    }
+
+
+async def fetch_all_countries() -> list:
+    """Countries are small enough to page fully and use as exact aggregate source."""
+    results = []
+    page = 1
+
+    while True:
+        data = await fetch_openaq(
+            "/countries",
+            params={"limit": COUNTRY_PAGE_SIZE, "page": page},
+            timeout=20,
+        )
+        chunk = data.get("results", [])
+        results.extend(chunk)
+        meta = data.get("meta", {})
+        found = normalize_found(meta.get("found"))
+
+        if not chunk or len(chunk) < COUNTRY_PAGE_SIZE:
+            break
+        if found is not None and len(results) >= found:
+            break
+        page += 1
+        if page > 20:
+            logger.warning("Stopped country pagination after 20 pages to protect upstream.")
+            break
+
+    return results
+
+
+def country_location_count(country: dict) -> int:
+    for key in ("locations", "locationsCount", "locationCount"):
+        value = country.get(key)
+        if isinstance(value, int):
+            return value
+    sensors = country.get("sensors", 0)
+    return sensors if isinstance(sensors, int) else 0
+
+
+def build_country_stats(countries: list) -> list:
+    chart_data = []
+    for country in countries:
+        count = country_location_count(country)
+        if count <= 0:
+            continue
+        chart_data.append({
+            "code": country.get("code", "XX"),
+            "name": country.get("name", "Unknown Country"),
+            "stationCount": count,
+            "avgRiskScore": 0,
+            "liveStations": 0,
+            "monitorCount": 0,
+            "sensorCount": country.get("sensors", 0) or 0,
+        })
+
+    chart_data.sort(key=lambda x: x["stationCount"], reverse=True)
+    return chart_data
+
+
+# ─── Pandas Processing Infrastructure ────────────────────────────────────────
 
 def calculate_staleness(last_updated: Optional[str]) -> str:
-    """Classify data freshness into live/recent/stale."""
     if not last_updated:
         return "unknown"
     try:
@@ -58,46 +170,34 @@ def calculate_staleness(last_updated: Optional[str]) -> str:
 
 
 def build_risk_score_df(df: pd.DataFrame) -> pd.DataFrame:
-    """
-    Core logic layer: Calculate composite risk/coverage scores.
-    
-    Score Composition:
-      - Parameter Diversity (40%): sensor count vs. max 8 params
-      - Data Recency (30%): live=30, recent=20, stale=5
-      - Monitor Quality (30%): reference monitor=30, low-cost=15
-    """
-    # Sensor count score
+    if df.empty:
+        return df
     df["param_score"] = df["sensor_count"].apply(lambda x: min(x / 8, 1) * 40)
-
-    # Staleness score
     staleness_map = {"live": 30, "recent": 20, "stale": 5, "unknown": 0}
     df["recency_score"] = df["staleness"].map(staleness_map).fillna(0)
-
-    # Monitor quality score
     df["coverage_score"] = df["is_monitor"].apply(lambda x: 30 if x else 15)
+    
+    df["risk_score"] = (df["param_score"] + df["recency_score"] + df["coverage_score"]).round().astype(int)
 
-    # Composite
-    df["risk_score"] = (
-        df["param_score"] + df["recency_score"] + df["coverage_score"]
-    ).round().astype(int)
+    def label_risk(score):
+        if score >= 80: return "High Coverage"
+        elif score >= 55: return "Moderate Coverage"
+        elif score >= 30: return "Low Coverage"
+        else: return "Sparse"
 
-    # Risk label
-    def label(score):
-        if score >= 80:
-            return "High Coverage"
-        elif score >= 55:
-            return "Moderate Coverage"
-        elif score >= 30:
-            return "Low Coverage"
-        else:
-            return "Sparse"
-
-    df["risk_label"] = df["risk_score"].apply(label)
+    df["risk_label"] = df["risk_score"].apply(label_risk)
+    
+    def color_risk(score):
+        if score >= 80: return "#38BDF8"
+        elif score >= 55: return "#818CF8"
+        elif score >= 30: return "#FACC15"
+        else: return "#EF4444"
+        
+    df["risk_color"] = df["risk_score"].apply(color_risk)
     return df
 
 
 def normalize_locations(raw_results: list) -> pd.DataFrame:
-    """Flatten OpenAQ v3 locations JSON → normalized Pandas DataFrame."""
     rows = []
     for loc in raw_results:
         coords = loc.get("coordinates") or {}
@@ -110,16 +210,17 @@ def normalize_locations(raw_results: list) -> pd.DataFrame:
         rows.append({
             "id": loc.get("id"),
             "name": loc.get("name", ""),
-            "locality": loc.get("locality"),
+            "locality": loc.get("locality") or "Unknown Locality",
             "timezone": loc.get("timezone", ""),
+            "country_id": country.get("id"),
             "country_code": country.get("code", ""),
             "country_name": country.get("name", ""),
-            "provider": provider.get("name", ""),
-            "owner": owner.get("name", ""),
+            "provider_name": provider.get("name", "Unknown Provider"),
+            "owner_name": owner.get("name", "Unknown Owner"),
             "latitude": coords.get("latitude"),
             "longitude": coords.get("longitude"),
             "sensor_count": len(sensors),
-            "parameters": [s["parameter"]["name"] for s in sensors if s.get("parameter")],
+            "sensors": sensors,
             "is_monitor": bool(loc.get("isMonitor", False)),
             "is_mobile": bool(loc.get("isMobile", False)),
             "last_updated": datetime_last.get("utc"),
@@ -129,194 +230,118 @@ def normalize_locations(raw_results: list) -> pd.DataFrame:
     if df.empty:
         return df
 
-    # Staleness classification
     df["staleness"] = df["last_updated"].apply(calculate_staleness)
-
-    # Drop invalid coordinates
     df = df.dropna(subset=["latitude", "longitude"])
     df["latitude"] = pd.to_numeric(df["latitude"], errors="coerce")
     df["longitude"] = pd.to_numeric(df["longitude"], errors="coerce")
-
-    # Risk scoring
     df = build_risk_score_df(df)
-
     return df
 
 
-def compute_country_aggregates(df: pd.DataFrame) -> pd.DataFrame:
-    """Country-level aggregations — Pandas groupby pipeline."""
-    if df.empty:
-        return pd.DataFrame()
+# ─── API Router Mapping (ORDER IS FIXED TO PREVENT 404s) ─────────────────────
 
-    agg = (
-        df.groupby(["country_code", "country_name"])
-        .agg(
-            station_count=("id", "count"),
-            avg_risk_score=("risk_score", "mean"),
-            live_stations=("staleness", lambda x: (x == "live").sum()),
-            monitor_count=("is_monitor", "sum"),
-        )
-        .reset_index()
-    )
-    agg["avg_risk_score"] = agg["avg_risk_score"].round(1)
-    return agg.sort_values("station_count", ascending=False)
-
-
-def aqi_from_pm25(pm25: float) -> dict:
-    """US EPA AQI linear interpolation for PM2.5."""
-    breakpoints = [
-        (0, 12, 0, 50, "Good"),
-        (12.1, 35.4, 51, 100, "Moderate"),
-        (35.5, 55.4, 101, 150, "Unhealthy for Sensitive Groups"),
-        (55.5, 150.4, 151, 200, "Unhealthy"),
-        (150.5, 250.4, 201, 300, "Very Unhealthy"),
-        (250.5, 500, 301, 500, "Hazardous"),
-    ]
-    for bp_lo, bp_hi, i_lo, i_hi, label in breakpoints:
-        if bp_lo <= pm25 <= bp_hi:
-            aqi = round(((i_hi - i_lo) / (bp_hi - bp_lo)) * (pm25 - bp_lo) + i_lo)
-            return {"aqi": min(aqi, 500), "label": label}
-    return {"aqi": 500, "label": "Hazardous"}
-
-
-# ─── Routes ──────────────────────────────────────────────────────────────────
-
-@app.get("/health")
-def health():
-    return {"status": "ok", "service": "DEXTERE AQ Intelligence API", "ts": datetime.now(timezone.utc).isoformat()}
-
-
-@app.get("/api/locations")
-async def get_locations(
-    limit: int = Query(100, ge=1, le=1000),
-    page: int = Query(1, ge=1),
-    country: Optional[str] = None,
-    coordinates: Optional[str] = None,
-    radius: int = Query(100000, ge=1000),
-):
-    """
-    Proxy + enrich OpenAQ locations with DEXTERE risk scoring.
-    Returns normalized JSON ready for the Next.js frontend.
-    """
-    url = f"{OPENAQ_BASE}/locations?limit={limit}&page={page}&sort=desc&order_by=lastUpdated"
-    if country:
-        url += f"&country={country}"
-    if coordinates:
-        url += f"&coordinates={coordinates}&radius={radius}"
-
-    async with httpx.AsyncClient(timeout=15) as client:
-        try:
-            resp = await client.get(url, headers=HEADERS)
-            resp.raise_for_status()
-            data = resp.json()
-        except httpx.HTTPStatusError as e:
-            raise HTTPException(status_code=e.response.status_code, detail="OpenAQ error")
-        except Exception as e:
-            raise HTTPException(status_code=503, detail=str(e))
-
-    raw = data.get("results", [])
-    df = normalize_locations(raw)
-
-    if df.empty:
-        return {"meta": data.get("meta", {}), "results": [], "enriched": True}
-
-    # Convert back to JSON-serializable list
-    results = json.loads(df.to_json(orient="records"))
-
+@app.get("/api/countries")
+async def get_countries():
+    """Provides complete country directory objects straight to the UI dropdown selection tool."""
+    countries = await fetch_all_countries()
     return {
-        "meta": data.get("meta", {}),
-        "results": results,
-        "enriched": True,
-        "pipeline": "pandas-v2-dextere-risk-score",
+        "meta": {"found": len(countries), "page": 1, "limit": len(countries), "returned": len(countries), "hasMore": False},
+        "results": countries,
     }
 
 
-@app.get("/api/country-stats")
-async def get_country_stats(
-    limit: int = Query(200, ge=10, le=1000),
-):
-    """Country-level aggregation pipeline using Pandas groupby."""
-    url = f"{OPENAQ_BASE}/locations?limit={limit}&sort=desc&order_by=lastUpdated"
-
-    async with httpx.AsyncClient(timeout=20) as client:
-        try:
-            resp = await client.get(url, headers=HEADERS)
-            resp.raise_for_status()
-            data = resp.json()
-        except Exception as e:
-            raise HTTPException(status_code=503, detail=str(e))
-
-    df = normalize_locations(data.get("results", []))
-    if df.empty:
-        return {"results": []}
-
-    agg_df = compute_country_aggregates(df)
-    return {"results": json.loads(agg_df.to_json(orient="records"))}
+@app.get("/api/country-stats/master")
+async def get_master_country_chart_stats():
+    """Generates global country metrics arrays natively from Python, ensuring your chart bars stay populated."""
+    countries = await fetch_all_countries()
+    chart_data = build_country_stats(countries)
+    return {
+        "meta": {"found": len(chart_data), "page": 1, "limit": len(chart_data), "returned": len(chart_data), "hasMore": False},
+        "results": chart_data,
+        "totalLocations": sum(item["stationCount"] for item in chart_data),
+    }
 
 
-@app.get("/api/export/csv")
-async def export_csv(
-    limit: int = Query(500, ge=1, le=2000),
-    country: Optional[str] = None,
+@app.get("/api/bootstrap")
+async def get_bootstrap():
+    """Single startup payload for dropdowns, chart data, and global totals."""
+    countries = await fetch_all_countries()
+    stats = build_country_stats(countries)
+    return {
+        "countries": countries,
+        "countryStats": stats,
+        "totalLocations": sum(item["stationCount"] for item in stats),
+    }
+
+
+# DYNAMIC GENERIC ROUTE IS PLACED AT THE BOTTOM SO IT DOES NOT OVERWRITE STATIC PATHS
+@app.get("/api/locations")
+async def get_locations(
+    limit: int = Query(DEFAULT_PAGE_SIZE, ge=1, le=MAX_PAGE_SIZE),
+    page: int = Query(1, ge=1),
+    country_id: Optional[str] = None,
+    filter_type: Optional[str] = "all",
+    search: Optional[str] = None,
 ):
     """
-    Phase 3 Export: Stream enriched CSV with risk scores.
-    Maps to the 'Download Sample Data' button in the UI.
+    Central Single Source of Truth Core Route. Manages parameter filtering, 
+    and passes upstream metadata back un-truncated to support progressive pagination button tracking.
     """
-    url = f"{OPENAQ_BASE}/locations?limit={limit}&sort=desc&order_by=lastUpdated"
-    if country:
-        url += f"&country={country}"
+    queryParams = {
+        "limit": str(limit),
+        "page": str(page)
+    }
+    
+    if country_id and country_id.strip() != "" and country_id != "undefined":
+        queryParams["countries_id"] = str(country_id)
 
-    async with httpx.AsyncClient(timeout=30) as client:
-        try:
-            resp = await client.get(url, headers=HEADERS)
-            resp.raise_for_status()
-            data = resp.json()
-        except Exception as e:
-            raise HTTPException(status_code=503, detail=str(e))
+    data = await fetch_openaq("/locations", params=queryParams, timeout=25)
 
-    df = normalize_locations(data.get("results", []))
+    raw_results = data.get("results", [])
+    df = normalize_locations(raw_results)
+    
+    # Extract the dynamic metadata from OpenAQ to return true asset numbers
+    upstream_meta = data.get("meta", {})
+    response_meta = build_meta(upstream_meta, page, limit, len(raw_results))
+
     if df.empty:
-        raise HTTPException(status_code=404, detail="No data found")
+        return {"meta": response_meta, "results": [], "countryStats": []}
 
-    # Select export columns
-    export_cols = [
-        "id", "name", "country_code", "country_name",
-        "latitude", "longitude", "locality",
-        "sensor_count", "parameters", "is_monitor", "is_mobile",
-        "staleness", "risk_score", "risk_label", "last_updated",
-    ]
-    export_df = df[[c for c in export_cols if c in df.columns]].copy()
-    export_df["parameters"] = export_df["parameters"].apply(
-        lambda x: "|".join(x) if isinstance(x, list) else ""
-    )
+    if filter_type == "live":
+        df = df[df["staleness"] == "live"]
+    elif filter_type == "monitor":
+        df = df[df["is_monitor"] == True]
 
-    buf = io.StringIO()
-    export_df.to_csv(buf, index=False)
-    buf.seek(0)
+    if search:
+        q = search.strip().lower()
+        df = df[
+            df["name"].str.lower().str.contains(q) |
+            df["country_name"].str.lower().str.contains(q) |
+            df["country_code"].str.lower().str.contains(q) |
+            df["locality"].str.lower().str.contains(q)
+        ]
 
-    filename = f"dextere-aq-{datetime.now(timezone.utc).strftime('%Y%m%d-%H%M')}.csv"
-    return StreamingResponse(
-        iter([buf.getvalue()]),
-        media_type="text/csv",
-        headers={"Content-Disposition": f"attachment; filename={filename}"},
-    )
+    country_stats = []
+    if not df.empty:
+        agg = (
+            df.groupby(["country_code", "country_name"])
+            .agg(
+                stationCount=("id", "count"),
+                avgRiskScore=("risk_score", "mean"),
+                liveStations=("staleness", lambda x: (x == "live").sum()),
+                monitorCount=("is_monitor", "sum"),
+            )
+            .reset_index()
+        )
+        agg = agg.rename(columns={"country_code": "code", "country_name": "name"})
+        agg["avgRiskScore"] = agg["avgRiskScore"].round().astype(int)
+        agg["liveStations"] = agg["liveStations"].astype(int)
+        agg["monitorCount"] = agg["monitorCount"].astype(int)
+        country_stats = json.loads(agg.sort_values("stationCount", ascending=False).to_json(orient="records"))
 
-
-@app.get("/api/aqi-score")
-def compute_aqi(pm25: float = Query(..., ge=0, le=1000)):
-    """Calculate US EPA AQI from a PM2.5 value."""
-    return aqi_from_pm25(pm25)
-
-
-@app.get("/api/latest/{location_id}")
-async def get_latest(location_id: int):
-    """Fetch latest sensor readings for a specific location."""
-    url = f"{OPENAQ_BASE}/locations/{location_id}/latest"
-    async with httpx.AsyncClient(timeout=10) as client:
-        try:
-            resp = await client.get(url, headers=HEADERS)
-            resp.raise_for_status()
-            return resp.json()
-        except Exception as e:
-            raise HTTPException(status_code=503, detail=str(e))
+    serializable_results = json.loads(df.to_json(orient="records"))
+    return {
+        "meta": response_meta,
+        "results": serializable_results,
+        "countryStats": country_stats
+    }

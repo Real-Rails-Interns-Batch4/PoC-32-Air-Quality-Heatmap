@@ -1,0 +1,4 @@
+.next/
+__pycache__/
+*.py[cod]
+repomix-output.xml
