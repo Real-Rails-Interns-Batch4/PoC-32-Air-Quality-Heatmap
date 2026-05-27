@@ -1,6 +1,6 @@
 """
-DEXTERE Air Quality Intelligence — FastAPI Backend
-Production Core Implementation Core File
+Air Quality Intelligence - FastAPI Backend
+Production core implementation file.
 
 Runs on: uvicorn main:app --reload --port 8000
 """
@@ -17,14 +17,14 @@ from dotenv import load_dotenv
 
 # Initialize logging profiles
 logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger("dextere-aq")
+logger = logging.getLogger("air-quality-poc")
 
 # Load environmental variables from local development env files.
 load_dotenv()
 load_dotenv(".env.local")
 
 app = FastAPI(
-    title="DEXTERE Air Quality Intelligence API",
+    title="Air Quality Intelligence API",
     description="FastAPI Orchestration + Pandas Processing Single Source of Truth over OpenAQ v3",
     version="2.0.0",
 )
@@ -32,7 +32,7 @@ app = FastAPI(
 # Configure CORS policies to allow web communication with Next.js on port 3000
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000","http://localhost:3006","http://127.0.0.1:3006", "https://*.vercel.app"],
+    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000","http://localhost:3001","http://127.0.0.1:3001", "https://*.vercel.app"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -45,7 +45,7 @@ MAX_PAGE_SIZE = 1000
 COUNTRY_PAGE_SIZE = 1000
 
 HEADERS = {
-    "User-Agent": "DEXTERE-AQ-Terminal/1.0",
+    "User-Agent": "Air-Quality-POC/1.0",
     "Accept": "application/json"
 }
 

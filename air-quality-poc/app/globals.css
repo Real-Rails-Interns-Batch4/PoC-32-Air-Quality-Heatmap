@@ -40,7 +40,7 @@ body {
   background: var(--accent-cyan);
 }
 
-/* DEXTERE Glass Card */
+/* Glass card */
 .glass-card {
   background: rgba(11, 17, 23, 0.85);
   backdrop-filter: blur(12px);

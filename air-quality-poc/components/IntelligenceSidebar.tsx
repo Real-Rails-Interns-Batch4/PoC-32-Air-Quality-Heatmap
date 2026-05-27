@@ -44,7 +44,7 @@ export default function IntelligenceSidebar({
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `dextere-aq-data-${new Date().toISOString().split("T")[0]}.csv`;
+    a.download = `air-quality-data-${new Date().toISOString().split("T")[0]}.csv`;
     a.click();
     URL.revokeObjectURL(url);
   };

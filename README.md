@@ -1,8 +1,8 @@
-# DEXTERE Air Quality Intelligence Terminal
+# Air Quality Intelligence Terminal
 
 ## PoC v1.0 - Global Air Quality Monitor Network
 
-A DEXTERE-style intelligence dashboard for exploring global air-quality monitoring stations from OpenAQ v3.
+An intelligence dashboard for exploring global air-quality monitoring stations from OpenAQ v3.
 
 The app now uses a FastAPI-first architecture: the browser never calls OpenAQ directly for air-quality data. Next.js renders the dashboard, while FastAPI owns upstream data access, API-key injection, filtering, pagination, Pandas processing, risk scoring, and country aggregation.
 
@@ -14,7 +14,7 @@ The app now uses a FastAPI-first architecture: the browser never calls OpenAQ di
 | Visualization | Custom SVG world map, Recharts |
 | Backend | Python FastAPI, Pandas |
 | Data Source | OpenAQ v3 REST API |
-| Styling | DEXTERE Obsidian / Cyan / Indigo design system |
+| Styling | Obsidian / Cyan / Indigo design system |
 
 ## Architecture
 
@@ -41,7 +41,7 @@ The frontend depends on FastAPI APIs only for air-quality data. The only browser
 ```txt
 POC/
 |-- README.md
-`-- dextere-aq/
+`-- air-quality-poc/
     |-- app/
     |   |-- dashboard/page.tsx       # Main dashboard UI
     |   |-- globals.css              # Design tokens and global styles
@@ -53,7 +53,7 @@ POC/
     |-- components/
     |   |-- AQWorldMap.tsx           # SVG world map and station plotting
     |   |-- CountryChart.tsx         # Recharts country distribution chart
-    |   |-- DextereHeader.tsx        # Top navigation/status bar
+    |   |-- AppHeader.tsx            # Top navigation/status bar
     |   |-- FilterBar.tsx            # Search/filter/country controls
     |   `-- IntelligenceSidebar.tsx  # Intelligence panel
     |-- lib/
@@ -80,7 +80,7 @@ Python 3.13+ may require extra care with scientific Python packages on Windows. 
 
 ```bash
 git clone https://github.com/Eternal66-6/POC.git
-cd POC/dextere-aq
+cd POC/air-quality-poc
 ```
 
 ## 2. Configure OpenAQ
@@ -89,7 +89,7 @@ OpenAQ v3 requires a free API key.
 
 1. Register at https://explore.openaq.org/register
 2. Copy your API key.
-3. Create `dextere-aq/.env.local`:
+3. Create `air-quality-poc/.env.local`:
 
 ```env
 OPENAQ_API_KEY=your_actual_api_key_here
@@ -102,14 +102,14 @@ Keep `.env.local` beside `package.json`.
 Frontend:
 
 ```bash
-cd dextere-aq
+cd air-quality-poc
 npm install
 ```
 
 Backend:
 
 ```bash
-cd dextere-aq
+cd air-quality-poc
 python -m venv ../airenv
 ../airenv/Scripts/python.exe -m pip install -r backend/requirements.txt --prefer-binary
 ```
@@ -126,14 +126,14 @@ python -m venv ../airenv
 Start FastAPI first:
 
 ```bash
-cd dextere-aq
+cd air-quality-poc
 ../airenv/Scripts/uvicorn.exe backend.main:app --reload --host 127.0.0.1 --port 8000
 ```
 
 Then start Next.js in a second terminal:
 
 ```bash
-cd dextere-aq
+cd air-quality-poc
 npm run dev
 ```
 
@@ -228,7 +228,7 @@ After starting both servers, check:
 
 Your API key is missing or not loaded.
 
-- Confirm `dextere-aq/.env.local` exists.
+- Confirm `air-quality-poc/.env.local` exists.
 - Confirm it contains `OPENAQ_API_KEY=...`.
 - Restart the FastAPI backend after changing the file.
 
@@ -265,7 +265,7 @@ Use Python 3.11 or 3.12 and install with binary wheels:
 python -m pip install -r backend/requirements.txt --prefer-binary
 ```
 
-## DEXTERE Brand Tokens
+## Design Tokens
 
 | Token | Value |
 |---|---|

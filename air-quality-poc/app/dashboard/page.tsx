@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect, useCallback, useMemo } from "react";
-import DextereHeader from "@/components/DextereHeader";
+import AppHeader from "@/components/AppHeader";
 import IntelligenceSidebar from "@/components/IntelligenceSidebar";
 import AQWorldMap from "@/components/AQWorldMap";
 import FilterBar from "@/components/FilterBar";
@@ -156,7 +156,7 @@ export default function DashboardPage() {
       style={{ background: "#030712", width: "100vw", height: "100vh", overflow: "hidden" }}
     >
       {/* Header Panel */}
-      <DextereHeader
+      <AppHeader
         stationCount={displayedStationTotal}
         liveCount={liveCount}
         lastRefresh={lastRefresh || "—"}

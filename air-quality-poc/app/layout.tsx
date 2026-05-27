@@ -9,9 +9,8 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "DEXTERE | Air Quality Intelligence Terminal",
-  description:
-    "Global Air Quality Intelligence — Powered by OpenAQ. A DEXTERE Capital PoC.",
+  title: "Air Quality Intelligence Terminal",
+  description: "Global air quality intelligence powered by OpenAQ.",
 };
 
 export default function RootLayout({

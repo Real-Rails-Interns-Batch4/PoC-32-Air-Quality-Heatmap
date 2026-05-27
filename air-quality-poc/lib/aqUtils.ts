@@ -1,5 +1,5 @@
 // ============================================================
-// DEXTERE Air Quality Intelligence — Core Logic Layer
+// Air Quality Intelligence - Core Logic Layer
 // Mirrors Python/Pandas risk-score pipeline in TypeScript
 // ============================================================
 

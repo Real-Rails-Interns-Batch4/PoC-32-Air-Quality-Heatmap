@@ -1,7 +1,7 @@
 "use client";
 import { Activity, Wifi } from "lucide-react";
 
-export default function DextereHeader({
+export default function AppHeader({
   stationCount,
   liveCount,
   lastRefresh,
@@ -19,7 +19,6 @@ export default function DextereHeader({
         backdropFilter: "blur(12px)",
       }}
     >
-      {/* Left — Brand */}
       <div className="flex items-center gap-3">
         <div className="relative flex items-center gap-1.5">
           <div
@@ -33,13 +32,7 @@ export default function DextereHeader({
             className="font-bold tracking-tighter text-sm"
             style={{ color: "#38BDF8", letterSpacing: "-0.04em" }}
           >
-            dex
-          </span>
-          <span
-            className="font-bold tracking-tighter text-sm"
-            style={{ color: "#818CF8", letterSpacing: "-0.04em" }}
-          >
-            TERE
+            AQ
           </span>
         </div>
         <div
@@ -51,7 +44,6 @@ export default function DextereHeader({
         </span>
       </div>
 
-      {/* Center — System Status */}
       <div className="flex items-center gap-4">
         <div className="flex items-center gap-1.5">
           <div
@@ -63,11 +55,10 @@ export default function DextereHeader({
           </span>
         </div>
         <span className="text-xs opacity-40">
-          OpenAQ v3 · {lastRefresh}
+          OpenAQ v3 - {lastRefresh}
         </span>
       </div>
 
-      {/* Right — Stats */}
       <div className="flex items-center gap-4">
         <div className="flex items-center gap-2 text-xs">
           <Activity className="w-3.5 h-3.5" style={{ color: "#38BDF8" }} />
