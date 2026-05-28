@@ -4,7 +4,7 @@
 
 An intelligence dashboard for exploring global air-quality monitoring stations from OpenAQ v3.
 
-The app now uses a FastAPI-first architecture: the browser never calls OpenAQ directly for air-quality data. Next.js renders the dashboard, while FastAPI owns upstream data access, API-key injection, filtering, pagination, Pandas processing, risk scoring, and country aggregation.
+The app uses a FastAPI-first architecture: the browser never calls OpenAQ directly for air-quality data. Next.js renders the dashboard, while FastAPI owns upstream data access, API-key injection, filtering, pagination, Pandas processing, risk scoring, and country aggregation.
 
 ## Live Stack
 
@@ -42,27 +42,30 @@ The frontend depends on FastAPI APIs only for air-quality data. The only browser
 POC/
 |-- README.md
 `-- air-quality-poc/
-    |-- app/
-    |   |-- dashboard/page.tsx       # Main dashboard UI
-    |   |-- globals.css              # Design tokens and global styles
-    |   |-- layout.tsx               # Root layout
-    |   `-- page.tsx                 # Redirects to /dashboard
+    |-- frontend/
+    |   |-- app/
+    |   |   |-- dashboard/page.tsx       # Main dashboard UI
+    |   |   |-- globals.css              # Design tokens and global styles
+    |   |   |-- layout.tsx               # Root layout
+    |   |   `-- page.tsx                 # Redirects to /dashboard
+    |   |-- components/
+    |   |   |-- AQWorldMap.tsx           # SVG world map and station plotting
+    |   |   |-- CountryChart.tsx         # Recharts country distribution chart
+    |   |   |-- AppHeader.tsx            # Top navigation/status bar
+    |   |   |-- FilterBar.tsx            # Search/filter/country controls
+    |   |   `-- IntelligenceSidebar.tsx  # Intelligence panel
+    |   |-- lib/
+    |   |   `-- aqUtils.ts               # Shared frontend utilities
+    |   |-- .env.example
+    |   |-- package.json
+    |   |-- next.config.js
+    |   |-- tailwind.config.js
+    |   `-- tsconfig.json
     |-- backend/
-    |   |-- main.py                  # FastAPI service and Pandas pipeline
-    |   `-- requirements.txt         # Python dependencies
-    |-- components/
-    |   |-- AQWorldMap.tsx           # SVG world map and station plotting
-    |   |-- CountryChart.tsx         # Recharts country distribution chart
-    |   |-- AppHeader.tsx            # Top navigation/status bar
-    |   |-- FilterBar.tsx            # Search/filter/country controls
-    |   `-- IntelligenceSidebar.tsx  # Intelligence panel
-    |-- lib/
-    |   `-- aqUtils.ts               # Shared frontend utilities
-    |-- .env.local                   # Local API key, not committed
-    |-- package.json
-    |-- next.config.js
-    |-- tailwind.config.js
-    `-- tsconfig.json
+    |   |-- main.py                      # FastAPI service and Pandas pipeline
+    |   `-- requirements.txt             # Python dependencies
+    |-- .gitignore
+    `-- README.md
 ```
 
 ## Prerequisites
@@ -89,27 +92,27 @@ OpenAQ v3 requires a free API key.
 
 1. Register at https://explore.openaq.org/register
 2. Copy your API key.
-3. Create `air-quality-poc/.env.local`:
+3. Create `frontend/.env.local`:
 
 ```env
 OPENAQ_API_KEY=your_actual_api_key_here
 ```
 
-Keep `.env.local` beside `package.json`.
+Keep `.env.local` beside `frontend/package.json`.
 
 ## 3. Install Dependencies
 
 Frontend:
 
 ```bash
-cd air-quality-poc
+cd frontend
 npm install
 ```
 
 Backend:
 
 ```bash
-cd air-quality-poc
+cd ..   # back to air-quality-poc/
 python -m venv ../airenv
 ../airenv/Scripts/python.exe -m pip install -r backend/requirements.txt --prefer-binary
 ```
@@ -123,17 +126,16 @@ python -m venv ../airenv
 
 ## 4. Run Locally
 
-Start FastAPI first:
+Start FastAPI first (from `air-quality-poc/`):
 
 ```bash
-cd air-quality-poc
 ../airenv/Scripts/uvicorn.exe backend.main:app --reload --host 127.0.0.1 --port 8000
 ```
 
-Then start Next.js in a second terminal:
+Then start Next.js in a second terminal (from `air-quality-poc/frontend/`):
 
 ```bash
-cd air-quality-poc
+cd frontend
 npm run dev
 ```
 
@@ -153,6 +155,8 @@ If port `3000` is busy, Next.js may choose another port such as `3006`. The back
 | `npm run build` | Create a production build |
 | `npm run start` | Serve the production build |
 | `npm run lint` | Run Next lint setup/checks |
+
+Run these from the `frontend/` directory.
 
 ## FastAPI Endpoints
 
@@ -228,7 +232,7 @@ After starting both servers, check:
 
 Your API key is missing or not loaded.
 
-- Confirm `air-quality-poc/.env.local` exists.
+- Confirm `frontend/.env.local` exists.
 - Confirm it contains `OPENAQ_API_KEY=...`.
 - Restart the FastAPI backend after changing the file.
 
