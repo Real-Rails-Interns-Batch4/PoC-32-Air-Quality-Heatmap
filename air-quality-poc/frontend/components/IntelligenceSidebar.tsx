@@ -59,25 +59,26 @@ export default function IntelligenceSidebar({
 
   return (
     <aside
-      className="w-[30%] flex flex-col border-l sidebar-scroll"
+      className="h-full w-full flex flex-col border-l sidebar-scroll"
       style={{
-        background: "rgba(11,17,23,0.97)",
-        borderColor: "#1F2937",
+        background: "rgba(4,21,18,0.96)",
+        borderColor: "rgba(125,211,182,0.22)",
+        boxShadow: "-24px 0 60px rgba(0,0,0,0.45)",
       }}
     >
       {/* ── Section A: Title & Key Metric ── */}
       <div
         className="p-4 border-b"
-        style={{ borderColor: "#1F2937" }}
+        style={{ borderColor: "#17302E" }}
       >
         <div className="flex items-center gap-2 mb-3">
           <div
             className="w-px h-4"
-            style={{ background: "#38BDF8" }}
+            style={{ background: "#22C55E" }}
           />
           <span
             className="text-xs font-semibold tracking-widest uppercase"
-            style={{ color: "#38BDF8" }}
+            style={{ color: "#22C55E" }}
           >
             Intelligence Panel
           </span>
@@ -88,7 +89,7 @@ export default function IntelligenceSidebar({
         >
           Global Air Quality
           <br />
-          <span style={{ color: "#38BDF8" }}>Monitor Network</span>
+          <span style={{ color: "#22C55E" }}>Monitor Network</span>
         </h2>
         
         {/* 2. Conditionally display the timestamp text safely */}
@@ -100,8 +101,8 @@ export default function IntelligenceSidebar({
         <div
           className="mt-3 p-3 rounded-lg"
           style={{
-            background: "rgba(56,189,248,0.06)",
-            border: "1px solid rgba(56,189,248,0.15)",
+            background: "rgba(34,197,94,0.06)",
+            border: "1px solid rgba(34,197,94,0.15)",
           }}
         >
           <div className="flex items-end justify-between">
@@ -109,7 +110,7 @@ export default function IntelligenceSidebar({
               <p className="text-xs opacity-50 mb-0.5">Active Stations</p>
               <p
                 className="text-3xl font-black font-mono"
-                style={{ color: "#38BDF8", letterSpacing: "-0.05em" }}
+                style={{ color: "#22C55E", letterSpacing: "-0.05em" }}
               >
                 {loading ? "—" : totalStations.toLocaleString()}
               </p>
@@ -129,14 +130,14 @@ export default function IntelligenceSidebar({
 
           <div
             className="mt-2 h-1 rounded-full overflow-hidden"
-            style={{ background: "#1F2937" }}
+            style={{ background: "#17302E" }}
           >
             <div
               className="h-full rounded-full transition-all duration-700"
               style={{
                 width: `${coverageRate}%`,
                 background:
-                  "linear-gradient(90deg, #38BDF8, #818CF8)",
+                  "linear-gradient(90deg, #22C55E, #FACC15)",
               }}
             />
           </div>
@@ -146,13 +147,13 @@ export default function IntelligenceSidebar({
       {/* ── Section B: Why This Matters ── */}
       <div
         className="p-4 border-b"
-        style={{ borderColor: "#1F2937" }}
+        style={{ borderColor: "#17302E" }}
       >
         <div className="flex items-center gap-2 mb-3">
-          <TrendingUp className="w-3.5 h-3.5" style={{ color: "#818CF8" }} />
+          <TrendingUp className="w-3.5 h-3.5" style={{ color: "#FACC15" }} />
           <span
             className="text-xs font-semibold tracking-widest uppercase"
-            style={{ color: "#818CF8" }}
+            style={{ color: "#FACC15" }}
           >
             Why This Matters
           </span>
@@ -163,8 +164,8 @@ export default function IntelligenceSidebar({
             <div
               className="p-3 rounded-lg mb-3"
               style={{
-                background: "rgba(129,140,248,0.06)",
-                border: "1px solid rgba(129,140,248,0.15)",
+                background: "rgba(250,204,21,0.06)",
+                border: "1px solid rgba(250,204,21,0.15)",
               }}
             >
               <p className="text-sm font-semibold mb-1 leading-tight">
@@ -180,9 +181,9 @@ export default function IntelligenceSidebar({
                     key={s.id}
                     className="px-1.5 py-0.5 rounded text-xs font-mono"
                     style={{
-                      background: "rgba(56,189,248,0.08)",
-                      border: "1px solid rgba(56,189,248,0.2)",
-                      color: "#38BDF8",
+                      background: "rgba(34,197,94,0.08)",
+                      border: "1px solid rgba(34,197,94,0.2)",
+                      color: "#22C55E",
                     }}
                   >
                     {s.parameter.displayName || s.parameter.name}
@@ -239,7 +240,7 @@ export default function IntelligenceSidebar({
       {/* ── Section C: Who Controls the Rail ── */}
       <div
         className="p-4 border-b"
-        style={{ borderColor: "#1F2937" }}
+        style={{ borderColor: "#17302E" }}
       >
         <div className="flex items-center gap-2 mb-3">
           <ShieldAlert className="w-3.5 h-3.5" style={{ color: "#F97316" }} />
@@ -255,7 +256,7 @@ export default function IntelligenceSidebar({
           <div className="space-y-2 animate-fade-in">
             <div className="flex items-start justify-between text-xs">
               <span className="opacity-50">Provider</span>
-              <span className="text-right max-w-[60%] font-medium" style={{ color: "#38BDF8" }}>
+              <span className="text-right max-w-[60%] font-medium" style={{ color: "#22C55E" }}>
                 {selectedLocation.provider?.name || "Unknown"}
               </span>
             </div>
@@ -287,7 +288,7 @@ export default function IntelligenceSidebar({
                   <div
                     key={i}
                     className="h-7 rounded animate-pulse"
-                    style={{ background: "#1F2937" }}
+                    style={{ background: "#17302E" }}
                   />
                 ))}
               </div>
@@ -307,20 +308,20 @@ export default function IntelligenceSidebar({
                       <span className="opacity-70 truncate">{c.name}</span>
                       <span
                         className="font-mono shrink-0 ml-1"
-                        style={{ color: "#38BDF8" }}
+                        style={{ color: "#22C55E" }}
                       >
                         {c.stationCount}
                       </span>
                     </div>
                     <div
                       className="h-0.5 rounded-full"
-                      style={{ background: "#1F2937" }}
+                      style={{ background: "#17302E" }}
                     >
                       <div
                         className="h-full rounded-full"
                         style={{
                           width: `${Math.min((c.stationCount / (topCountries[0]?.stationCount || 1)) * 100, 100)}%`,
-                          background: "linear-gradient(90deg, #38BDF8, #818CF8)",
+                          background: "linear-gradient(90deg, #22C55E, #FACC15)",
                         }}
                       />
                     </div>
@@ -335,10 +336,10 @@ export default function IntelligenceSidebar({
       {/* ── Section D: Data Source Status ── */}
       <div className="p-4 flex-1">
         <div className="flex items-center gap-2 mb-3">
-          <Database className="w-3.5 h-3.5" style={{ color: "#38BDF8" }} />
+          <Database className="w-3.5 h-3.5" style={{ color: "#22C55E" }} />
           <span
             className="text-xs font-semibold tracking-widest uppercase"
-            style={{ color: "#38BDF8" }}
+            style={{ color: "#22C55E" }}
           >
             Data Source Status
           </span>
@@ -411,26 +412,26 @@ export default function IntelligenceSidebar({
       {/* ── Download CTA ── */}
       <div
         className="p-4 border-t mt-auto"
-        style={{ borderColor: "#1F2937" }}
+        style={{ borderColor: "#17302E" }}
       >
         <button
           onClick={handleDownload}
           disabled={allLocations.length === 0}
           className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg text-sm font-semibold transition-all duration-200 disabled:opacity-30 disabled:cursor-not-allowed"
           style={{
-            background: "rgba(56,189,248,0.1)",
-            border: "1px solid rgba(56,189,248,0.3)",
-            color: "#38BDF8",
+            background: "rgba(34,197,94,0.1)",
+            border: "1px solid rgba(34,197,94,0.3)",
+            color: "#22C55E",
           }}
           onMouseEnter={(e) => {
             if (allLocations.length > 0) {
-              e.currentTarget.style.background = "rgba(56,189,248,0.18)";
+              e.currentTarget.style.background = "rgba(34,197,94,0.18)";
               e.currentTarget.style.boxShadow =
-                "0 0 12px rgba(56,189,248,0.2)";
+                "0 0 12px rgba(34,197,94,0.2)";
             }
           }}
           onMouseLeave={(e) => {
-            e.currentTarget.style.background = "rgba(56,189,248,0.1)";
+            e.currentTarget.style.background = "rgba(34,197,94,0.1)";
             e.currentTarget.style.boxShadow = "none";
           }}
         >
@@ -445,3 +446,4 @@ export default function IntelligenceSidebar({
     </aside>
   );
 }
+

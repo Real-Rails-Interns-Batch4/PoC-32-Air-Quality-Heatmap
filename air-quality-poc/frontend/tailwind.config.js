@@ -8,17 +8,17 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        obsidian: '#030712',
-        navy: '#0B1117',
-        slate800: '#1F2937',
+        obsidian: '#041512',
+        navy: '#071B1A',
+        slate800: '#17302E',
         cyan: {
-          DEFAULT: '#38BDF8',
-          glow: 'rgba(56, 189, 248, 0.15)',
-          soft: 'rgba(56, 189, 248, 0.08)',
+          DEFAULT: '#22C55E',
+          glow: 'rgba(34, 197, 94, 0.15)',
+          soft: 'rgba(34, 197, 94, 0.08)',
         },
         indigo: {
-          DEFAULT: '#818CF8',
-          glow: 'rgba(129, 140, 248, 0.15)',
+          DEFAULT: '#FACC15',
+          glow: 'rgba(250, 204, 21, 0.15)',
         },
       },
       fontFamily: {
@@ -55,3 +55,4 @@ module.exports = {
   },
   plugins: [],
 }
+

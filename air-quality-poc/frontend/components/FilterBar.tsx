@@ -33,15 +33,20 @@ export default function FilterBar({
 
   return (
     <div
-      className="flex items-center gap-2 px-4 py-2 border-b shrink-0"
-      style={{ background: "rgba(11,17,23,0.9)", borderColor: "#1F2937" }}
+      className="flex items-center gap-2 rounded-lg px-3 py-2 shrink-0"
+      style={{
+        background: "rgba(7,27,26,0.86)",
+        border: "1px solid rgba(125,211,182,0.18)",
+        boxShadow: "0 18px 40px rgba(0,0,0,0.28)",
+        backdropFilter: "blur(14px)",
+      }}
     >
       {/* Search */}
       <div
         className="flex items-center gap-2 flex-1 max-w-xs px-3 py-1.5 rounded-lg"
         style={{
-          background: "rgba(31,41,55,0.5)",
-          border: "1px solid #1F2937",
+          background: "rgba(4,21,18,0.62)",
+          border: "1px solid rgba(125,211,182,0.16)",
         }}
       >
         <Search className="w-3.5 h-3.5 opacity-40" />
@@ -57,7 +62,7 @@ export default function FilterBar({
       {/* Status filters */}
       <div
         className="flex items-center rounded-lg overflow-hidden"
-        style={{ border: "1px solid #1F2937" }}
+        style={{ border: "1px solid rgba(125,211,182,0.16)" }}
       >
         {FILTERS.map((f) => (
           <button
@@ -67,10 +72,10 @@ export default function FilterBar({
             style={{
               background:
                 filter === f.key
-                  ? "rgba(56,189,248,0.12)"
+                  ? "rgba(34,197,94,0.12)"
                   : "transparent",
-              color: filter === f.key ? "#38BDF8" : "rgba(255,255,255,0.4)",
-              borderRight: "1px solid #1F2937",
+              color: filter === f.key ? "#22C55E" : "rgba(255,255,255,0.4)",
+              borderRight: "1px solid rgba(125,211,182,0.12)",
             }}
           >
             {f.label}
@@ -82,8 +87,8 @@ export default function FilterBar({
       <div
         className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg"
         style={{
-          background: "rgba(31,41,55,0.5)",
-          border: "1px solid #1F2937",
+          background: "rgba(4,21,18,0.62)",
+          border: "1px solid rgba(125,211,182,0.16)",
         }}
       >
         <Globe className="w-3.5 h-3.5 opacity-40" />
@@ -91,7 +96,7 @@ export default function FilterBar({
           value={country}
           onChange={(e) => onCountry(e.target.value)}
           className="bg-transparent text-xs outline-none cursor-pointer"
-          style={{ color: country ? "#38BDF8" : "rgba(255,255,255,0.5)" }}
+          style={{ color: country ? "#22C55E" : "rgba(255,255,255,0.5)" }}
         >
           <option value="" className="bg-gray-900 text-white">All Countries</option>
           {countries.map((c) => (
@@ -109,9 +114,9 @@ export default function FilterBar({
         disabled={loading}
         className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs transition-all duration-150 disabled:opacity-40"
         style={{
-          background: "rgba(56,189,248,0.06)",
-          border: "1px solid rgba(56,189,248,0.2)",
-          color: "#38BDF8",
+          background: "rgba(34,197,94,0.06)",
+          border: "1px solid rgba(34,197,94,0.2)",
+          color: "#22C55E",
         }}
       >
         <RefreshCw

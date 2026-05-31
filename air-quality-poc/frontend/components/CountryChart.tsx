@@ -20,9 +20,9 @@ const CustomTooltip = ({ active, payload }: any) => {
   return (
     <div
       className="glass-card rounded-lg p-3 text-xs"
-      style={{ border: "1px solid rgba(56,189,248,0.2)", background: "#0B1117" }}
+      style={{ border: "1px solid rgba(34,197,94,0.2)", background: "#071B1A" }}
     >
-      <p className="font-semibold mb-1" style={{ color: "#38BDF8" }}>
+      <p className="font-semibold mb-1" style={{ color: "#22C55E" }}>
         {d.name} ({d.code})
       </p>
       <p className="opacity-60">
@@ -32,7 +32,7 @@ const CustomTooltip = ({ active, payload }: any) => {
         Live: <span className="font-mono" style={{ color: "#22C55E" }}>{d.liveStations}</span>
       </p>
       <p className="opacity-60">
-        Monitors: <span className="font-mono" style={{ color: "#818CF8" }}>{d.monitorCount}</span>
+        Monitors: <span className="font-mono" style={{ color: "#FACC15" }}>{d.monitorCount}</span>
       </p>
     </div>
   );
@@ -45,12 +45,12 @@ export default function CountryChart({ data }: Props) {
   return (
     <div
       className="glass-card rounded-lg p-3 w-full"
-      style={{ border: "1px solid #1F2937", background: "rgba(3, 7, 18, 0.4)", height: "150px" }}
+      style={{ border: "1px solid #17302E", background: "rgba(3, 7, 18, 0.4)", height: "150px" }}
     >
       <div className="flex items-center justify-between mb-1">
         <p
           className="text-[10px] font-semibold tracking-widest uppercase"
-          style={{ color: "#818CF8" }}
+          style={{ color: "#FACC15" }}
         >
           Station Distribution by Country
         </p>
@@ -62,7 +62,7 @@ export default function CountryChart({ data }: Props) {
           <XAxis
             dataKey="code"
             tick={{ fill: "rgba(255,255,255,0.4)", fontSize: 9 }}
-            axisLine={{ stroke: "#1F2937" }}
+            axisLine={{ stroke: "#17302E" }}
             tickLine={false}
           />
           <YAxis
@@ -73,13 +73,13 @@ export default function CountryChart({ data }: Props) {
           />
           <Tooltip 
             content={<CustomTooltip />} 
-            cursor={{ fill: "rgba(56,189,248,0.04)" }} 
+            cursor={{ fill: "rgba(34,197,94,0.04)" }} 
           />
           <Bar dataKey="stationCount" radius={[2, 2, 0, 0]}>
             {top10.map((_, i) => (
               <Cell
                 key={`cell-${i}`}
-                fill={i === 0 ? "#38BDF8" : i < 3 ? "#818CF8" : "#374151"}
+                fill={i === 0 ? "#22C55E" : i < 3 ? "#FACC15" : "#374151"}
                 fillOpacity={0.8}
               />
             ))}

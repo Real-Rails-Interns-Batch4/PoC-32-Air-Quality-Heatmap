@@ -4,7 +4,6 @@ import AppHeader from "@/components/AppHeader";
 import IntelligenceSidebar from "@/components/IntelligenceSidebar";
 import AQWorldMap from "@/components/AQWorldMap";
 import FilterBar from "@/components/FilterBar";
-import CountryChart from "@/components/CountryChart";
 
 const BACKEND_BASE = "http://127.0.0.1:8000";
 const LOCATION_PAGE_SIZE = 500;
@@ -29,23 +28,22 @@ export default function DashboardPage() {
   const [countryStats, setCountryStats] = useState<any[]>([]);
   const [globalCountryStats, setGlobalCountryStats] = useState<any[]>([]);
   const [countries, setCountries] = useState<DropdownCountry[]>([]);
-  
+
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedLocation, setSelectedLocation] = useState<any | null>(null);
-  
+
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<"all" | "live" | "monitor">("all");
   const [country, setCountry] = useState("");
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [totalLocations, setTotalLocations] = useState<number | null>(null);
-  
+
   const [lastRefresh, setLastRefresh] = useState("");
   const [meta, setMeta] = useState<OpenAQMeta | null>(null);
 
-  // Initialize master lookup fields from backend on component mount
   useEffect(() => {
     fetch(`${BACKEND_BASE}/api/bootstrap`)
       .then((r) => r.json())
@@ -69,7 +67,6 @@ export default function DashboardPage() {
       .catch((err) => console.error("Backend bootstrap sync failure:", err));
   }, []);
 
-  // Central Core Location Query Function: Merges progressive streaming data chunks
   const fetchLocations = useCallback(async (targetPage: number, appendMode: boolean = false) => {
     if (targetPage === 1) setLoading(true);
     else setLoadingMore(true);
@@ -81,7 +78,7 @@ export default function DashboardPage() {
         page: targetPage.toString(),
         filter_type: filter,
       });
-      
+
       if (country && country !== "") {
         params.set("country_id", country);
       }
@@ -144,154 +141,135 @@ export default function DashboardPage() {
     [allLocations]
   );
   const displayedStationTotal = meta?.found ?? totalLocations ?? allLocations.length;
-  const chartStats = countryStats.length > 0 ? countryStats : globalCountryStats;
   const registryLabel = meta?.found
     ? `${displayedStationTotal.toLocaleString()} total locations globally`
     : `${allLocations.length.toLocaleString()} locations loaded${hasMore ? " with more available" : ""}`;
+  const panelStats = countryStats.length > 0 ? countryStats : globalCountryStats;
 
   return (
-    <div 
-      key={allLocations.length > 0 ? "loaded" : "loading"} // Force-trigger a re-render on data change
-      className="flex flex-col noise-overlay" 
-      style={{ background: "#030712", width: "100vw", height: "100vh", overflow: "hidden" }}
-    >
-      {/* Header Panel */}
-      <AppHeader
-        stationCount={displayedStationTotal}
-        liveCount={liveCount}
-        lastRefresh={lastRefresh || "—"}
+    <div className="relative h-screen w-screen overflow-hidden noise-overlay" style={{ background: "#041512" }}>
+      <AQWorldMap
+        locations={allLocations}
+        onSelectLocation={setSelectedLocation}
+        selectedId={selectedLocation?.id ?? null}
       />
 
-      {/* Filter Control Bar */}
-      <FilterBar
-        search={search}
-        onSearch={setSearch}
-        filter={filter}
-        onFilter={setFilter}
-        country={country}
-        onCountry={setCountry}
-        countries={countries}
-        onRefresh={() => fetchLocations(1, false)}
-        loading={loading}
-      />
-
-      {/* Main Split Interface Layout Workspace */}
-      <div className="flex flex-row w-full" style={{ height: "calc(100vh - 110px)", overflow: "hidden" }}>
-        
-        {/* Left Workspace Column: Explicitly bounded via Viewport calculation math */}
-        <main 
-  className="relative bg-[#030712]" 
-  style={{ width: "72%", height: "calc(100vh - 110px)", position: "relative", overflow: "hidden" }}
->
-  
-  {/* MAP ELEMENT BOX: Hard-clamped using absolute positioning top coordinates */}
-  <div 
-    className="absolute top-0 left-0 w-full bg-[#020C16]" 
-    style={{ bottom: "200px", position: "absolute", overflow: "hidden" }}
-  >
-    {loading && allLocations.length === 0 ? (
-      <div className="absolute inset-0 flex items-center justify-center">
-        <div className="text-center">
-          <div
-            className="w-12 h-12 rounded-full border-2 border-t-transparent animate-spin mx-auto mb-4"
-            style={{ borderColor: "#38BDF8", borderTopColor: "transparent" }}
+      <div className="pointer-events-none absolute inset-x-0 top-0 z-50">
+        <div className="pointer-events-auto">
+          <AppHeader
+            stationCount={displayedStationTotal}
+            liveCount={liveCount}
+            lastRefresh={lastRefresh || "-"}
           />
-          <p className="text-sm opacity-50 font-mono">
-            Streaming Integrated FastAPI Blocks...
-          </p>
+        </div>
+
+        <div className="pointer-events-auto mx-4 mt-3 max-w-[1040px]">
+          <FilterBar
+            search={search}
+            onSearch={setSearch}
+            filter={filter}
+            onFilter={setFilter}
+            country={country}
+            onCountry={setCountry}
+            countries={countries}
+            onRefresh={() => fetchLocations(1, false)}
+            loading={loading}
+          />
         </div>
       </div>
-    ) : error ? (
-      <div className="absolute inset-0 flex items-center justify-center">
+
+      {loading && allLocations.length === 0 && (
+        <div className="absolute inset-0 z-40 flex items-center justify-center">
+          <div className="text-center">
+            <div
+              className="mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-2 border-t-transparent"
+              style={{ borderColor: "#22C55E", borderTopColor: "transparent" }}
+            />
+            <p className="font-mono text-sm opacity-60">Streaming FastAPI intelligence blocks...</p>
+          </div>
+        </div>
+      )}
+
+      {error && (
+        <div className="absolute inset-0 z-40 flex items-center justify-center">
+          <div
+            className="glass-card max-w-md rounded-lg p-6 text-center"
+            style={{ border: "1px solid rgba(239,68,68,0.28)" }}
+          >
+            <p className="mb-2 text-sm font-semibold" style={{ color: "#EF4444" }}>
+              API Pipeline Disconnected
+            </p>
+            <p className="mb-4 text-xs opacity-50">{error}</p>
+            <button
+              onClick={() => fetchLocations(1, false)}
+              className="rounded px-4 py-2 text-xs"
+              style={{
+                background: "rgba(34,197,94,0.1)",
+                border: "1px solid rgba(34,197,94,0.3)",
+                color: "#22C55E",
+              }}
+            >
+              Reconnect Terminal Link
+            </button>
+          </div>
+        </div>
+      )}
+
+      <div className="pointer-events-none absolute bottom-5 left-5 z-40 flex items-end gap-3">
         <div
-          className="glass-card rounded-xl p-6 max-w-md text-center"
-          style={{ border: "1px solid rgba(239,68,68,0.2)" }}
+          className="rounded-lg px-3 py-2 font-mono text-[10px]"
+          style={{ background: "rgba(7,27,26,0.82)", border: "1px solid rgba(125,211,182,0.18)" }}
         >
-          <p className="text-sm font-semibold mb-2" style={{ color: "#EF4444" }}>
-            API Pipeline Disconnected
-          </p>
-          <p className="text-xs opacity-50 mb-4">{error}</p>
-          <button
-            onClick={() => fetchLocations(1, false)}
-            className="text-xs px-4 py-2 rounded"
-            style={{
-              background: "rgba(56,189,248,0.1)",
-              border: "1px solid rgba(56,189,248,0.3)",
-              color: "#38BDF8",
-            }}
-          >
-            Reconnect Terminal Link
-          </button>
+          <span className="opacity-40">OpenAQ registry tracks </span>
+          <span style={{ color: "#7DD3B6" }}>{registryLabel}</span>
+        </div>
+        <div
+          className="rounded-lg px-3 py-2 font-mono text-[10px]"
+          style={{ background: "rgba(7,27,26,0.82)", border: "1px solid rgba(125,211,182,0.18)" }}
+        >
+          <span className="opacity-40">Buffer </span>
+          <span style={{ color: "#FACC15" }}>{allLocations.length.toLocaleString()} items</span>
         </div>
       </div>
-    ) : (
-      <div className="w-full h-full relative overflow-hidden flex items-center justify-center">
-        <AQWorldMap
-          locations={allLocations}
-          onSelectLocation={setSelectedLocation}
-          selectedId={selectedLocation?.id ?? null}
-        />
-        
-        {/* Floating Progressive Chunk Ingestion Button Layer */}
-        {hasMore && (
-          <button
-            onClick={loadNextChunk}
-            disabled={loadingMore}
-            className="font-mono text-[10px] px-4 py-2 rounded uppercase tracking-wider text-cyan transition-all border border-cyan/30 bg-[#0B1117] hover:border-cyan hover:bg-cyan/10 cursor-pointer shadow-2xl"
-            style={{ position: "absolute", bottom: "16px", right: "16px", zIndex: 9999 }}
-          >
-            {loadingMore ? "Streaming Array Segment..." : "Fetch Next Chunk Layer"}
-          </button>
-        )}
-      </div>
-    )}
-  </div>
 
-  {/* FIXED METRICS PANEL: Hardcoded to slide directly into the bottom viewport lane */}
-  <div
-    className="px-4 py-2 border-t"
-    style={{ 
-      borderColor: "#1F2937", 
-      background: "#0B1117", 
-      position: "absolute",
-      bottom: "0px",
-      left: "0px",
-      width: "100%",
-      height: "200px", 
-      boxSizing: "border-box",
-      zIndex: 40
-    }}
-  >
-    <div className="flex items-center gap-4 mb-1">
-      {meta && (
-        <span className="text-[10px] opacity-30 font-mono">
-          OpenAQ registry tracks {registryLabel}
-        </span>
+      {hasMore && !error && allLocations.length > 0 && (
+        <button
+          onClick={loadNextChunk}
+          disabled={loadingMore}
+          className="absolute bottom-5 right-5 z-40 rounded px-4 py-2 font-mono text-[10px] uppercase tracking-wider transition-all disabled:opacity-50"
+          style={{
+            background: "rgba(7,27,26,0.9)",
+            border: "1px solid rgba(34,197,94,0.35)",
+            color: "#22C55E",
+            boxShadow: "0 18px 40px rgba(0,0,0,0.35)",
+          }}
+        >
+          {loadingMore ? "Streaming Array Segment..." : "Fetch Next Chunk Layer"}
+        </button>
       )}
-      <span className="text-[10px] opacity-30 font-mono ml-auto">
-        Buffer memory layer handling {allLocations.length.toLocaleString()} items
-      </span>
-    </div>
-    
-    {/* Bounded Chart container wrapper anchor box */}
-    <div className="w-full h-[155px]" style={{ height: "155px", position: "relative" }}>
-      {chartStats.length > 0 && (
-        <CountryChart data={chartStats} />
-      )}
-    </div>
-  </div>
-</main>
 
-        {/* Real-time Cyber Intelligence Telemetry Panel Sidebar */}
-        <IntelligenceSidebar
-          selectedLocation={selectedLocation}
-          countryStats={countryStats.length > 0 ? countryStats : globalCountryStats}
-          totalStations={displayedStationTotal}
-          liveStations={liveCount}
-          loading={loading}
-          allLocations={allLocations}
-        />
-      </div>
+      {selectedLocation && (
+        <div className="absolute inset-y-0 right-0 z-50 flex w-full justify-end bg-black/20 backdrop-blur-[1px]">
+          <div className="relative h-full w-full max-w-[430px] animate-slide-in">
+            <button
+              onClick={() => setSelectedLocation(null)}
+              className="absolute right-4 top-4 z-10 rounded-full px-2 py-1 text-xs"
+              style={{ background: "rgba(4,21,18,0.92)", border: "1px solid rgba(125,211,182,0.22)", color: "#D8FFF0" }}
+              aria-label="Close intelligence panel"
+            >
+              Close
+            </button>
+            <IntelligenceSidebar
+              selectedLocation={selectedLocation}
+              countryStats={panelStats}
+              totalStations={displayedStationTotal}
+              liveStations={liveCount}
+              loading={loading}
+              allLocations={allLocations}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -182,7 +182,7 @@ export default function AQWorldMap({ locations, onSelectLocation, selectedId }: 
     <div
       ref={containerRef}
       className="relative w-full h-full overflow-hidden"
-      style={{ background: "#020C16", cursor: isDragging.current ? "grabbing" : "grab" }}
+      style={{ background: "#031412", cursor: isDragging.current ? "grabbing" : "grab" }}
       onMouseDown={onMouseDown}
       onMouseMove={onMouseMove}
       onMouseUp={onMouseUp}
@@ -196,7 +196,7 @@ export default function AQWorldMap({ locations, onSelectLocation, selectedId }: 
         viewBox={`${viewBox.x} ${viewBox.y} ${viewBox.w} ${viewBox.h}`}
         style={{ display: "block" }}
       >
-        <rect x="-500" y="-250" width="2000" height="1000" fill="#020C16" />
+        <rect x="-500" y="-250" width="2000" height="1000" fill="#031412" />
 
         {[-60, -30, 0, 30, 60].map((lat) => (
           <line key={`lat${lat}`}
@@ -219,8 +219,8 @@ export default function AQWorldMap({ locations, onSelectLocation, selectedId }: 
           <g>
             {landPathsRef.current.map((d, i) => (
               <path key={`land-${i}`} d={d}
-                fill="#0D2235"
-                stroke="#1B3D58"
+                fill="#0A2B25"
+                stroke="#195346"
                 strokeWidth={0.5}
                 strokeLinejoin="round"
                 fillRule="evenodd"
@@ -234,25 +234,25 @@ export default function AQWorldMap({ locations, onSelectLocation, selectedId }: 
           .map(({ loc, x, y }) => {
             const sel = loc.id === selectedId;
             const r = sel ? baseR * 2.2 : loc.isMonitor ? baseR * 1.4 : baseR;
-            const color = loc.staleness === "live" ? "#38BDF8"
-              : loc.staleness === "recent" ? "#818CF8" : "#2D4060";
+            const color = loc.staleness === "live" ? "#22C55E"
+              : loc.staleness === "recent" ? "#FACC15" : "#2D4060";
 
             return (
               <g key={`station-node-${loc.id}`}>
                 {loc.staleness === "live" && (
                   <circle cx={x} cy={y} r={r * 2.5}
-                    fill="none" stroke="#38BDF8" strokeWidth={0.3} opacity={0.2} />
+                    fill="none" stroke="#22C55E" strokeWidth={0.3} opacity={0.2} />
                 )}
                 {sel && (
                   <circle cx={x} cy={y} r={r * 4}
-                    fill="none" stroke="#38BDF8" strokeWidth={0.8}
+                    fill="none" stroke="#22C55E" strokeWidth={0.8}
                     opacity={0.6} strokeDasharray="3 2" />
                 )}
                 <circle
                   cx={x} cy={y} r={r}
                   fill={color}
                   fillOpacity={sel ? 1 : loc.staleness === "live" ? 0.9 : 0.5}
-                  stroke={sel ? "#38BDF8" : loc.staleness === "live" ? "rgba(56,189,248,0.5)" : "transparent"}
+                  stroke={sel ? "#22C55E" : loc.staleness === "live" ? "rgba(34,197,94,0.5)" : "transparent"}
                   strokeWidth={sel ? 1 : 0.5}
                   style={{ cursor: "pointer" }}
                   onMouseEnter={(e) => {
@@ -288,12 +288,12 @@ export default function AQWorldMap({ locations, onSelectLocation, selectedId }: 
           style={{
             left: Math.min(tooltip.x + 14, dims.w - 220),
             top: Math.max(tooltip.y - 95, 8),
-            border: "1px solid rgba(56,189,248,0.3)",
-            background: "rgba(11,17,23,0.97)",
+            border: "1px solid rgba(34,197,94,0.3)",
+            background: "rgba(7,27,26,0.97)",
             backdropFilter: "blur(8px)",
           }}
         >
-          <p className="text-xs font-semibold truncate mb-0.5" style={{ color: "#38BDF8" }}>
+          <p className="text-xs font-semibold truncate mb-0.5" style={{ color: "#22C55E" }}>
             {tooltip.loc.name}
           </p>
           <p className="text-xs opacity-40 mb-2">{tooltip.loc.country?.code} · {tooltip.loc.locality || "—"}</p>
@@ -311,7 +311,7 @@ export default function AQWorldMap({ locations, onSelectLocation, selectedId }: 
             </div>
             <div>
               <p className="opacity-40">Sensors</p>
-              <p className="font-mono" style={{ color: "#818CF8" }}>{tooltip.loc.parameterCount}</p>
+              <p className="font-mono" style={{ color: "#FACC15" }}>{tooltip.loc.parameterCount}</p>
             </div>
             <div>
               <p className="opacity-40">Type</p>
@@ -322,14 +322,14 @@ export default function AQWorldMap({ locations, onSelectLocation, selectedId }: 
         </div>
       )}
 
-      <div className="absolute bottom-4 left-4 rounded-lg p-3"
-        style={{ background: "rgba(11,17,23,0.92)", border: "1px solid #1F2937" }}>
-        <p className="text-xs font-semibold tracking-widest uppercase mb-2" style={{ color: "#38BDF8" }}>
+      <div className="absolute bottom-24 left-4 rounded-lg p-3"
+        style={{ background: "rgba(7,27,26,0.9)", border: "1px solid rgba(125,211,182,0.18)" }}>
+        <p className="text-xs font-semibold tracking-widest uppercase mb-2" style={{ color: "#22C55E" }}>
           Station Status
         </p>
         {[
-          { color: "#38BDF8", label: "Live (< 1hr)" },
-          { color: "#818CF8", label: "Recent (< 24hr)" },
+          { color: "#22C55E", label: "Live (< 1hr)" },
+          { color: "#FACC15", label: "Recent (< 24hr)" },
           { color: "#2D4060", label: "Stale (> 24hr)" },
         ].map((item) => (
           <div key={item.label} className="flex items-center gap-2 mb-1.5">
@@ -337,13 +337,13 @@ export default function AQWorldMap({ locations, onSelectLocation, selectedId }: 
             <span className="text-xs opacity-60">{item.label}</span>
           </div>
         ))}
-        <div className="mt-2 pt-2 text-xs opacity-25" style={{ borderTop: "1px solid #1F2937" }}>
+        <div className="mt-2 pt-2 text-xs opacity-25" style={{ borderTop: "1px solid #17302E" }}>
           Scroll to zoom · Drag to pan
         </div>
       </div>
 
-      <div className="absolute top-3 right-3 font-mono text-xs px-2 py-1 rounded"
-        style={{ background: "rgba(11,17,23,0.8)", border: "1px solid #1F2937", color: "rgba(255,255,255,0.3)" }}>
+      <div className="absolute top-24 right-5 font-mono text-xs px-2 py-1 rounded"
+        style={{ background: "rgba(7,27,26,0.78)", border: "1px solid rgba(125,211,182,0.18)", color: "rgba(255,255,255,0.38)" }}>
         {stations.length} stations plotted
       </div>
     </div>

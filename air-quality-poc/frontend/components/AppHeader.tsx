@@ -1,5 +1,6 @@
 "use client";
-import { Activity, Wifi } from "lucide-react";
+import { Activity, Info, Layers, Wifi } from "lucide-react";
+import { useState } from "react";
 
 export default function AppHeader({
   stationCount,
@@ -10,79 +11,86 @@ export default function AppHeader({
   liveCount: number;
   lastRefresh: string;
 }) {
+  const [showMeta, setShowMeta] = useState(false);
+  const stack = "Next.js 14, TypeScript, Tailwind CSS, FastAPI, Pandas, OpenAQ v3";
+
   return (
     <header
-      className="flex items-center justify-between px-6 py-3 border-b shrink-0"
+      className="mx-4 mt-4 flex h-12 items-center justify-between rounded-lg px-4 text-white"
       style={{
-        background: "rgba(11,17,23,0.95)",
-        borderColor: "#1F2937",
-        backdropFilter: "blur(12px)",
+        background: "rgba(4,21,18,0.82)",
+        border: "1px solid rgba(125,211,182,0.18)",
+        boxShadow: "0 18px 40px rgba(0,0,0,0.34)",
+        backdropFilter: "blur(16px)",
       }}
     >
       <div className="flex items-center gap-3">
-        <div className="relative flex items-center gap-1.5">
-          <div
-            className="w-2 h-2 rounded-full"
-            style={{
-              background: "#38BDF8",
-              boxShadow: "0 0 8px rgba(56,189,248,0.8)",
-            }}
-          />
-          <span
-            className="font-bold tracking-tighter text-sm"
-            style={{ color: "#38BDF8", letterSpacing: "-0.04em" }}
-          >
-            AQ
-          </span>
-        </div>
         <div
-          className="h-4 w-px mx-1"
-          style={{ background: "#1F2937" }}
-        />
-        <span className="text-xs font-medium tracking-widest uppercase opacity-50">
-          Air Quality Intelligence
-        </span>
-      </div>
-
-      <div className="flex items-center gap-4">
-        <div className="flex items-center gap-1.5">
-          <div
-            className="w-1.5 h-1.5 rounded-full status-dot-live"
-            style={{ background: "#22C55E" }}
-          />
-          <span className="text-xs" style={{ color: "#22C55E" }}>
-            LIVE
-          </span>
+          className="flex h-7 w-7 items-center justify-center rounded-full"
+          style={{ background: "rgba(34,197,94,0.12)", border: "1px solid rgba(34,197,94,0.35)" }}
+        >
+          <Layers className="h-3.5 w-3.5" style={{ color: "#22C55E" }} />
         </div>
-        <span className="text-xs opacity-40">
-          OpenAQ v3 - {lastRefresh}
-        </span>
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-widest" style={{ color: "#D8FFF0" }}>
+            Air Quality Intelligence
+          </p>
+          <p className="font-mono text-[10px] opacity-45">OpenAQ v3 - {lastRefresh}</p>
+        </div>
       </div>
 
       <div className="flex items-center gap-4">
-        <div className="flex items-center gap-2 text-xs">
-          <Activity className="w-3.5 h-3.5" style={{ color: "#38BDF8" }} />
-          <span className="opacity-60">Stations:</span>
-          <span style={{ color: "#38BDF8" }} className="font-mono font-semibold">
+        <div className="hidden items-center gap-2 text-xs sm:flex">
+          <Activity className="h-3.5 w-3.5" style={{ color: "#22C55E" }} />
+          <span className="opacity-55">Stations</span>
+          <span className="font-mono font-semibold" style={{ color: "#D8FFF0" }}>
             {stationCount.toLocaleString()}
           </span>
         </div>
-        <div className="flex items-center gap-2 text-xs">
-          <Wifi className="w-3.5 h-3.5" style={{ color: "#22C55E" }} />
-          <span className="opacity-60">Live:</span>
-          <span style={{ color: "#22C55E" }} className="font-mono font-semibold">
+        <div className="hidden items-center gap-2 text-xs sm:flex">
+          <Wifi className="h-3.5 w-3.5" style={{ color: "#FACC15" }} />
+          <span className="opacity-55">Live</span>
+          <span className="font-mono font-semibold" style={{ color: "#FACC15" }}>
             {liveCount.toLocaleString()}
           </span>
         </div>
-        <div
-          className="px-2 py-0.5 rounded text-xs font-mono"
-          style={{
-            background: "rgba(56,189,248,0.08)",
-            border: "1px solid rgba(56,189,248,0.2)",
-            color: "#38BDF8",
-          }}
-        >
-          PoC v1.0
+
+        <div className="relative">
+          <button
+            onClick={() => setShowMeta((value) => !value)}
+            className="flex h-8 w-8 items-center justify-center rounded-full transition-colors"
+            style={{
+              background: showMeta ? "rgba(34,197,94,0.18)" : "rgba(255,255,255,0.04)",
+              border: "1px solid rgba(125,211,182,0.2)",
+              color: "#D8FFF0",
+            }}
+            aria-label="Show project metadata"
+          >
+            <Info className="h-4 w-4" />
+          </button>
+
+          {showMeta && (
+            <div
+              className="absolute right-0 top-10 w-72 rounded-lg p-3 text-xs"
+              style={{
+                background: "rgba(4,21,18,0.96)",
+                border: "1px solid rgba(125,211,182,0.22)",
+                boxShadow: "0 22px 50px rgba(0,0,0,0.45)",
+              }}
+            >
+              <div className="mb-2 flex items-center justify-between">
+                <span className="font-semibold uppercase tracking-widest" style={{ color: "#22C55E" }}>
+                  Metadata
+                </span>
+                <span className="font-mono opacity-35">Batch 4</span>
+              </div>
+              <div className="space-y-1.5 font-mono">
+                <p><span className="opacity-40">git user:</span> Eternal66-6</p>
+                <p><span className="opacity-40">name:</span> Ananthakrishnan A H</p>
+                <p><span className="opacity-40">stack:</span> {stack}</p>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </header>

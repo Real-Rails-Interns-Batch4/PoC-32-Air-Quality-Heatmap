@@ -124,9 +124,9 @@ export function enrichLocation(loc: OpenAQLocation): EnrichedLocation {
 
   const riskColor =
     riskScore >= 80
-      ? "#38BDF8"
+      ? "#22C55E"
       : riskScore >= 55
-      ? "#818CF8"
+      ? "#FACC15"
       : riskScore >= 30
       ? "#FACC15"
       : "#EF4444";
@@ -232,3 +232,4 @@ export const PARAM_DISPLAY: Record<string, string> = {
 export function formatParamName(name: string): string {
   return PARAM_DISPLAY[name.toLowerCase()] || name.toUpperCase();
 }
+
