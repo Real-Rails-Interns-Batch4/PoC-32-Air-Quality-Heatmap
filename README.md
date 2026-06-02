@@ -68,6 +68,38 @@ POC/
     `-- README.md
 ```
 
+## Docker Deployment (Production-Ready)
+
+You can spin up the entire stack (Frontend + Backend) using Docker and Docker Compose. This is the recommended method for production-like environments.
+
+### 1. Configure Environment
+
+Create a `.env` file in the `air-quality-poc/` directory (or use the root `.env` if provided):
+
+```env
+OPENAQ_API_KEY=your_actual_api_key_here
+NEXT_PUBLIC_BACKEND_URL=http://localhost:8000
+ALLOWED_ORIGINS=http://localhost:3000
+```
+
+### 2. Build and Run
+
+From the `air-quality-poc/` directory:
+
+```bash
+docker-compose up --build
+```
+
+The services will be available at:
+- **Frontend:** `http://localhost:3000`
+- **Backend:** `http://localhost:8000`
+
+### Docker Architecture
+
+- **Multi-Stage Frontend:** Uses a lightweight `node:20-alpine` image. Assets are built in the first stage and served in the second to minimize image size.
+- **FastAPI Backend:** Uses `python:3.11-slim` with all dependencies pre-installed.
+- **Orchestration:** `docker-compose.yml` manages service networking and environment variable injection.
+
 ## Prerequisites
 
 | Tool | Recommended Version |

@@ -29,10 +29,11 @@ app = FastAPI(
     version="2.0.0",
 )
 
-# Configure CORS policies to allow web communication with Next.js on port 3000
+# Configure CORS policies
+allowed_origins = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000,http://127.0.0.1:3000").split(",")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000","http://localhost:3001","http://127.0.0.1:3001", "https://*.vercel.app"],
+    allow_origins=allowed_origins + ["https://*.vercel.app"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

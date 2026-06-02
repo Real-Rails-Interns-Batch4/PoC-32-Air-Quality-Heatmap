@@ -5,7 +5,7 @@ import IntelligenceSidebar from "@/components/IntelligenceSidebar";
 import AQWorldMap from "@/components/AQWorldMap";
 import FilterBar from "@/components/FilterBar";
 
-const BACKEND_BASE = "http://127.0.0.1:8000";
+const BACKEND_BASE = process.env.NEXT_PUBLIC_BACKEND_URL || "http://127.0.0.1:8000";
 const LOCATION_PAGE_SIZE = 500;
 
 interface OpenAQMeta {
