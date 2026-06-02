@@ -1,10 +1,17 @@
-# Stage 1: Build
+# syntax=docker/dockerfile:1
 FROM node:20-alpine AS builder
 WORKDIR /app
 
 # Install dependencies
 COPY package*.json ./
-RUN npm install
+
+# Use a cache mount for npm and increase network resilience
+RUN --mount=type=cache,target=/root/.npm \
+    npm ci \
+    --loglevel=info \
+    --fetch-retries=5 \
+    --fetch-retry-mintimeout=20000 \
+    --maxsockets=50
 
 # Copy source and build
 COPY . .
