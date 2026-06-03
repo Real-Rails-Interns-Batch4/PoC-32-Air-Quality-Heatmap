@@ -21,7 +21,4 @@ services:
     startCommand: npm run start
     envVars:
       - key: NEXT_PUBLIC_API_URL
-        fromService:
-          type: web
-          name: airquality-backend
-          property: url
+        value: https://airquality-backend.onrender.com
