@@ -9,7 +9,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Air Quality Intelligence Terminal",
+  title: "Infocreon Internship - Air Quality Intelligence",
   description: "Global air quality intelligence powered by OpenAQ.",
 };
 

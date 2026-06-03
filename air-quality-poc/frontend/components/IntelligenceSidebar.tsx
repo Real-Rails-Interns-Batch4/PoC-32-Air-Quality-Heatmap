@@ -87,9 +87,9 @@ export default function IntelligenceSidebar({
           className="text-lg font-bold tracking-tight leading-tight"
           style={{ letterSpacing: "-0.03em" }}
         >
-          Global Air Quality
+          Infocreon Internship
           <br />
-          <span style={{ color: "#22C55E" }}>Monitor Network</span>
+          <span style={{ color: "#22C55E" }}>Air Quality Intelligence</span>
         </h2>
         
         {/* 2. Conditionally display the timestamp text safely */}

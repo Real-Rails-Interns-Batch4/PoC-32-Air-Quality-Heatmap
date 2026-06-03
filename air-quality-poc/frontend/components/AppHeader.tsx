@@ -33,7 +33,7 @@ export default function AppHeader({
         </div>
         <div>
           <p className="text-xs font-semibold uppercase tracking-widest" style={{ color: "#D8FFF0" }}>
-            Air Quality Intelligence
+            Infocreon Internship - Air Quality Intelligence
           </p>
           <p className="font-mono text-[10px] opacity-45">OpenAQ v3 - {lastRefresh}</p>
         </div>
