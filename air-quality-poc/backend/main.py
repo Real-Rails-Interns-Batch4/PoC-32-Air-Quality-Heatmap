@@ -275,6 +275,20 @@ async def get_bootstrap():
     }
 
 
+@app.get("/")
+async def root_health_check():
+    """Service heartbeat for Render monitoring."""
+    return {
+        "status": "online",
+        "service": "Air Quality Intelligence API",
+        "version": "2.0.0",
+        "diagnostics": {
+            "openaq_key_active": bool(OPENAQ_API_KEY),
+            "cors_origins": os.getenv("CORS_ORIGINS", "not_set")
+        }
+    }
+
+
 # DYNAMIC GENERIC ROUTE IS PLACED AT THE BOTTOM SO IT DOES NOT OVERWRITE STATIC PATHS
 @app.get("/api/locations")
 async def get_locations(
