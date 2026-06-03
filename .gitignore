@@ -1,4 +1,27 @@
-.next/
+# Python
 __pycache__/
 *.py[cod]
+*$py.class
+venv/
+airenv/
+.env
+.env.local
+
+# Node
+node_modules/
+.next/
+out/
+build/
+.env.production
+
+# Lock files (requested to be excluded from cloud tracking tree)
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Project specific
 repomix-output.xml
