@@ -11,7 +11,7 @@ services:
       - key: OPENAQ_API_KEY
         sync: false
       - key: CORS_ORIGINS
-        value: https://airquality-frontend.onrender.com
+        value: https://airquality-frontend-6x2o.onrender.com
 
   - type: web
     name: airquality-frontend
@@ -22,4 +22,4 @@ services:
     startCommand: npm run start
     envVars:
       - key: NEXT_PUBLIC_API_URL
-        value: https://airquality-backend.onrender.com
+        value: https://airquality-backend-egmb.onrender.com
