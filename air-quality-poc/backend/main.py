@@ -275,7 +275,7 @@ async def get_bootstrap():
     }
 
 
-@app.get("/")
+@app.get("/", methods=["GET", "HEAD"])
 async def root_health_check():
     """Service heartbeat for Render monitoring."""
     return {

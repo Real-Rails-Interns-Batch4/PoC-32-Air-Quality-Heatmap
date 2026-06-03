@@ -6,6 +6,7 @@ services:
     rootDir: air-quality-poc/backend
     buildCommand: pip install -r requirements.txt
     startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /
     envVars:
       - key: OPENAQ_API_KEY
         sync: false
